@@ -26,7 +26,7 @@ export default function Home() {
       <main className="w-full max-w-4xl mx-auto my-auto py-8">
         <div className="text-center max-w-xl mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-2xs mb-3 uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+
             <span>Multi-Step Form Tasks</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">

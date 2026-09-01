@@ -18,7 +18,7 @@ export default function Task2Step2Business({ formData, errors = {}, touched = {}
       <Field
         id="companyName"
         name="companyName"
-        label="Company / Organization Name"
+        label="Company Name"
         required
         value={formData.companyName}
         onChange={onChange}
@@ -31,7 +31,7 @@ export default function Task2Step2Business({ formData, errors = {}, touched = {}
       <Field
         id="address"
         name="address"
-        label="Street Address"
+        label="Address"
         required
         value={formData.address}
         onChange={onChange}
@@ -55,29 +55,29 @@ export default function Task2Step2Business({ formData, errors = {}, touched = {}
         />
 
         <Field
-          id="zipCode"
-          name="zipCode"
-          label="ZIP / Postal Code"
+          id="zip"
+          name="zip"
+          label="ZIP Code"
           required
-          value={formData.zipCode}
+          value={formData.zip !== undefined ? formData.zip : formData.zipCode}
           onChange={onChange}
           onBlur={onBlur}
           placeholder="e.g. 97477"
-          error={touched.zipCode ? errors.zipCode : undefined}
+          hint="Numeric digits only"
+          error={touched.zip || touched.zipCode ? errors.zip || errors.zipCode : undefined}
         />
       </div>
 
-      {/* 5. Tax ID / Registration */}
+      {/* 5. Tax ID */}
       <Field
         id="taxId"
         name="taxId"
-        label="Tax ID / EIN / Business Registration"
+        label="Tax ID"
         required
         value={formData.taxId}
         onChange={onChange}
         onBlur={onBlur}
-        placeholder="e.g. XX-XXXXXXX or GSTIN"
-        hint="Federal Tax Identification Number or Company Registration ID"
+        placeholder="e.g. 12-3456789 or GSTIN"
         error={touched.taxId ? errors.taxId : undefined}
       />
     </div>

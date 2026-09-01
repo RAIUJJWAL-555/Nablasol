@@ -24,7 +24,7 @@ export default function Task2Step1Profile({ formData, errors = {}, touched = {},
           value={formData.firstName}
           onChange={onChange}
           onBlur={onBlur}
-          placeholder="e.g. Jane"
+          placeholder="Name"
           error={touched.firstName ? errors.firstName : undefined}
         />
 
@@ -36,7 +36,7 @@ export default function Task2Step1Profile({ formData, errors = {}, touched = {},
           value={formData.lastName}
           onChange={onChange}
           onBlur={onBlur}
-          placeholder="e.g. Doe"
+          placeholder="Last Name"
           error={touched.lastName ? errors.lastName : undefined}
         />
       </div>
@@ -46,26 +46,26 @@ export default function Task2Step1Profile({ formData, errors = {}, touched = {},
         <Field
           id="email"
           name="email"
-          label="Work Email Address"
+          label="Email"
           type="email"
           required
           value={formData.email}
           onChange={onChange}
           onBlur={onBlur}
-          placeholder="jane.doe@company.com"
+          placeholder="example@company.com"
           error={touched.email ? errors.email : undefined}
         />
 
         <Field
           id="phone"
           name="phone"
-          label="Phone Number"
+          label="Phone"
           type="tel"
           required
           value={formData.phone}
           onChange={onChange}
           onBlur={onBlur}
-          placeholder="+1 (555) 234-5678"
+          placeholder="+91 1111111111"
           error={touched.phone ? errors.phone : undefined}
         />
       </div>
