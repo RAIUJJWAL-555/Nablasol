@@ -257,7 +257,10 @@ export default function Task2() {
                   <img
                     src={catRippingImg}
                     alt="Cat Peeking"
-                    className="w-full h-auto max-h-[1880px] object-contain filter drop-shadow-2xl transition-transform duration-700 hover:scale-105 animate-fade-in select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                    fetchpriority="high"
+                    className="w-full h-auto max-h-[480px] object-contain filter drop-shadow-2xl transition-transform duration-700 hover:scale-105 animate-fade-in select-none pointer-events-none"
                   />
                 </div>
               </div>

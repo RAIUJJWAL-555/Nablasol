@@ -11,7 +11,7 @@ const COMMUNICATION_CHANNELS = [
 /**
  * Step 5: Client & Stakeholder Contacts
  */
-export default function Step5ClientContact({ formData, errors = {}, touched = {}, onChange, onBlur }) {
+function Step5ClientContact({ formData, errors = {}, touched = {}, onChange, onBlur }) {
   return (
     <div className="space-y-4 sm:space-y-5 animate-fade-in">
       {/* Step Header */}
@@ -82,3 +82,5 @@ export default function Step5ClientContact({ formData, errors = {}, touched = {}
     </div>
   );
 }
+
+export default React.memo(Step5ClientContact);

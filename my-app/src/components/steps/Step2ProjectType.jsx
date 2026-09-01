@@ -36,9 +36,16 @@ const PROJECT_TYPES = [
 ];
 
 /**
- * Step 2: Project Type & Billing
+ * Step 2: Project Type & Billing Rate / Budget
  */
-export default function Step2ProjectType({ formData, errors = {}, touched = {}, onChange, onBlur, setFormData }) {
+function Step2ProjectType({
+  formData,
+  errors = {},
+  touched = {},
+  onChange,
+  onBlur,
+  onTypeSelect,
+}) {
   const handleSelectType = (typeId) => {
     setFormData((prev) => ({
       ...prev,
@@ -162,3 +169,5 @@ export default function Step2ProjectType({ formData, errors = {}, touched = {}, 
     </div>
   );
 }
+
+export default React.memo(Step2ProjectType);

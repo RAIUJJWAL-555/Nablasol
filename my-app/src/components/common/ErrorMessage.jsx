@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Accessible inline error message component with warning icon.
  */
-export default function ErrorMessage({ id, error, className = '' }) {
+function ErrorMessage({ id, error, className = '' }) {
   if (!error) return null;
 
   return (
@@ -24,3 +24,5 @@ export default function ErrorMessage({ id, error, className = '' }) {
     </p>
   );
 }
+
+export default React.memo(ErrorMessage);

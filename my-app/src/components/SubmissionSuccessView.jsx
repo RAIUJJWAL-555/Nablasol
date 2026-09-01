@@ -18,6 +18,9 @@ export default function SubmissionSuccessView({
         <img
           src={whiteCatHeroImg}
           alt="White Cat Portrait"
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
           className="w-full h-full object-cover object-left-top lg:object-cover select-none pointer-events-none transition-transform duration-1000 ease-out hover:scale-102"
         />
         {/* Soft edge blend */}

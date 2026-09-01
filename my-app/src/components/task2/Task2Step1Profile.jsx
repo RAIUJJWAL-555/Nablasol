@@ -4,7 +4,7 @@ import Field from '../common/Field';
 /**
  * Task 2 - Step 1: Personal Profile
  */
-export default function Task2Step1Profile({ formData, errors = {}, touched = {}, onChange, onBlur }) {
+function Task2Step1Profile({ formData, errors = {}, touched = {}, onChange, onBlur }) {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="border-b border-slate-100 pb-3 mb-4">
@@ -102,3 +102,5 @@ export default function Task2Step1Profile({ formData, errors = {}, touched = {},
     </div>
   );
 }
+
+export default React.memo(Task2Step1Profile);

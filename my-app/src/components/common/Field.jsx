@@ -5,7 +5,7 @@ import ErrorMessage from './ErrorMessage';
 /**
  * Reusable Field component supporting inputs, selects, and textareas with labels, validation, and accessibility.
  */
-export default function Field({
+function Field({
   id,
   name,
   label,
@@ -137,3 +137,5 @@ export default function Field({
     </div>
   );
 }
+
+export default React.memo(Field);

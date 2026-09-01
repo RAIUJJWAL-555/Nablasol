@@ -5,7 +5,7 @@ import { formClasses } from '../../utils/formClasses';
 /**
  * Step 3: Tasks & Deliverables (Array management with Add/Remove)
  */
-export default function Step3Tasks({ formData, setFormData, errors = {}, touched = {} }) {
+function Step3Tasks({ formData, setFormData, errors = {}, touched = {} }) {
   const [taskInput, setTaskInput] = useState('');
   const [inputError, setInputError] = useState('');
 
@@ -141,3 +141,5 @@ export default function Step3Tasks({ formData, setFormData, errors = {}, touched
     </div>
   );
 }
+
+export default React.memo(Step3Tasks);

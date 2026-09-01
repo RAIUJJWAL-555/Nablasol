@@ -15,7 +15,7 @@ export const STEPS_CONFIG = [
  * - Step skipped/incomplete -> Not counted (Step number)
  * - Free navigation between any steps to allow completing ANY 4 of 6 steps
  */
-export default function Stepper({
+function Stepper({
   currentStep,
   stepValidity = {},
   onSelectStep,
@@ -122,3 +122,5 @@ export default function Stepper({
     </div>
   );
 }
+
+export default React.memo(Stepper);

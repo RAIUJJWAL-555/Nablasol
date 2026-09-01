@@ -5,7 +5,7 @@ import { STEPS_CONFIG } from '../common/Stepper';
 /**
  * Step 6: Review & Final Confirmation
  */
-export default function Step6Review({
+function Step6Review({
   formData,
   stepValidity = {},
   completedCount = 0,
@@ -218,3 +218,5 @@ export default function Step6Review({
     </div>
   );
 }
+
+export default React.memo(Step6Review);

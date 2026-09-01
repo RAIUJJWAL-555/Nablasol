@@ -8,7 +8,7 @@ export const TASK2_STEPS = [
 /**
  * 2-Step Progress Stepper for Task 2
  */
-export default function Task2Stepper({ currentStep, isStep1Valid, onSelectStep }) {
+function Task2Stepper({ currentStep, isStep1Valid, onSelectStep }) {
   return (
     <div className="w-full select-none mb-6">
       {/* Top Header Badge */}
@@ -77,3 +77,5 @@ export default function Task2Stepper({ currentStep, isStep1Valid, onSelectStep }
     </div>
   );
 }
+
+export default React.memo(Task2Stepper);

@@ -4,7 +4,7 @@ import Field from '../common/Field';
 /**
  * Task 2 - Step 2: Business Info
  */
-export default function Task2Step2Business({ formData, errors = {}, touched = {}, onChange, onBlur }) {
+function Task2Step2Business({ formData, errors = {}, touched = {}, onChange, onBlur }) {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="border-b border-slate-100 pb-3 mb-4">
@@ -83,3 +83,5 @@ export default function Task2Step2Business({ formData, errors = {}, touched = {}
     </div>
   );
 }
+
+export default React.memo(Task2Step2Business);

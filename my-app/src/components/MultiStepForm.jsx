@@ -410,6 +410,9 @@ export default function MultiStepForm() {
           <img
             src={catHeroImg}
             alt="Curious Cat Peeking"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
             className="w-full max-h-[80vh] object-contain select-none pointer-events-none transition-transform duration-500 hover:scale-105"
           />
           

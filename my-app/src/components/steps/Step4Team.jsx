@@ -14,7 +14,7 @@ export const DUMMY_USERS = [
 /**
  * Step 4: Team Allocation (Ram, Shyam, Ghanshyam, Sita, Gita, Sunita)
  */
-export default function Step4Team({ formData, setFormData, errors = {}, touched = {} }) {
+function Step4Team({ formData, setFormData, errors = {}, touched = {} }) {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [inputError, setInputError] = useState('');
 
@@ -171,3 +171,5 @@ export default function Step4Team({ formData, setFormData, errors = {}, touched 
     </div>
   );
 }
+
+export default React.memo(Step4Team);
