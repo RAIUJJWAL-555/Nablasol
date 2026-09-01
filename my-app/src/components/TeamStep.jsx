@@ -72,7 +72,7 @@ export default function TeamStep({ formData, setFormData, errors = {} }) {
               className={`w-full h-11 appearance-none px-4 bg-slate-900/70 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 transition-all cursor-pointer ${
                 inputError
                   ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                  : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                  : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
               }`}
             >
               <option value="" disabled className="bg-slate-900 text-slate-500">

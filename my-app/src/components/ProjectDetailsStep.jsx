@@ -20,12 +20,12 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
         </p>
       </div>
 
-      <div className="space-y-4 sm:space-y-5">
+      <div className="space-y-5">
         {/* 1. Project Name */}
         <div>
           <label
             htmlFor="projectName"
-            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
           >
             Project Name <span className="text-red-400">*</span>
           </label>
@@ -39,7 +39,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
             className={`w-full h-11 px-4 bg-slate-900/70 border rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
               errors.projectName
                 ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
             }`}
           />
           {errors.projectName && (
@@ -56,7 +56,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
         <div>
           <label
             htmlFor="client"
-            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
           >
             Client <span className="text-red-400">*</span>
           </label>
@@ -69,7 +69,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
               className={`w-full h-11 appearance-none px-4 bg-slate-900/70 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 transition-all cursor-pointer ${
                 errors.client
                   ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                  : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                  : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
               }`}
             >
               {CLIENT_OPTIONS.map((option) => (
@@ -104,7 +104,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
           <div>
             <label
               htmlFor="startDate"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5"
+              className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
             >
               Start Date <span className="text-red-400">*</span>
             </label>
@@ -117,7 +117,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
               className={`w-full h-11 px-4 bg-slate-900/70 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 transition-all cursor-pointer ${
                 errors.startDate
                   ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                  : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                  : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
               }`}
             />
             {errors.startDate && (
@@ -133,7 +133,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
           <div>
             <label
               htmlFor="endDate"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5"
+              className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
             >
               End Date <span className="text-red-400">*</span>
             </label>
@@ -146,7 +146,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
               className={`w-full h-11 px-4 bg-slate-900/70 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 transition-all cursor-pointer ${
                 errors.endDate
                   ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                  : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                  : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
               }`}
             />
             {errors.endDate && (
@@ -164,7 +164,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
         <div>
           <label
             htmlFor="notes"
-            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5"
+            className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
           >
             Notes & Scope (Optional)
           </label>
@@ -175,7 +175,7 @@ export default function ProjectDetailsStep({ formData, errors = {}, onChange }) 
             onChange={onChange}
             rows="3"
             placeholder="Add background context, constraints, or key deliverables..."
-            className="w-full p-4 bg-slate-900/70 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all resize-y"
+            className="w-full p-4 bg-slate-900/70 border border-slate-700/80 hover:border-slate-600 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all resize-y"
           />
         </div>
       </div>

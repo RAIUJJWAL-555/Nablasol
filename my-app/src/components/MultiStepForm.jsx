@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ProjectDetailsStep from './ProjectDetailsStep';
 import ProjectTypeStep from './ProjectTypeStep';
 import TasksStep from './TasksStep';
@@ -29,6 +29,39 @@ const INITIAL_FORM_STATE = {
   ],
 };
 
+const checkStepValidity = (step, data) => {
+  if (step === 1) {
+    if (!data.projectName || !data.projectName.trim()) return false;
+    if (!data.client || !data.client.trim()) return false;
+    if (!data.startDate || !data.endDate) return false;
+    if (new Date(data.startDate) >= new Date(data.endDate)) return false;
+    return true;
+  }
+
+  if (step === 2) {
+    if (data.projectType === 'Time & Materials') {
+      return Boolean(data.hourlyRate && Number(data.hourlyRate) > 0);
+    }
+    if (data.projectType === 'Fixed Fee') {
+      return Boolean(data.budget && Number(data.budget) > 0);
+    }
+    if (data.projectType === 'Non-billable') {
+      return true;
+    }
+    return false;
+  }
+
+  if (step === 3) {
+    return Array.isArray(data.tasks) && data.tasks.length > 0 && Array.isArray(data.team) && data.team.length > 0;
+  }
+
+  if (step === 4) {
+    return checkStepValidity(1, data) && checkStepValidity(2, data) && checkStepValidity(3, data);
+  }
+
+  return true;
+};
+
 const loadSavedFormData = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -43,8 +76,8 @@ const loadSavedFormData = () => {
         team: Array.isArray(parsed.team) ? parsed.team : INITIAL_FORM_STATE.team,
       };
     }
-  } catch (error) {
-    console.warn('Error reading form data from localStorage:', error);
+  } catch {
+    // Gracefully fallback
   }
   return INITIAL_FORM_STATE;
 };
@@ -58,8 +91,8 @@ const loadSavedStep = () => {
         return parsedStep;
       }
     }
-  } catch (error) {
-    console.warn('Error reading step from localStorage:', error);
+  } catch {
+    // Gracefully fallback
   }
   return 1;
 };
@@ -69,24 +102,30 @@ export default function MultiStepForm() {
   const [currentStep, setCurrentStep] = useState(loadSavedStep);
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStepTransitioning, setIsStepTransitioning] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState(null);
 
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
       setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    } catch (error) {
-      console.warn('Error saving form data to localStorage:', error);
+    } catch {
+      // Ignore storage errors
     }
   }, [formData]);
 
   useEffect(() => {
     try {
       localStorage.setItem(STEP_STORAGE_KEY, String(currentStep));
-    } catch (error) {
-      console.warn('Error saving step to localStorage:', error);
+    } catch {
+      // Ignore storage errors
     }
   }, [currentStep]);
+
+  const isCurrentStepValid = useMemo(() => {
+    return checkStepValidity(currentStep, formData);
+  }, [currentStep, formData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -137,31 +176,56 @@ export default function MultiStepForm() {
 
   const handleNext = () => {
     const isValid = validateStep(currentStep);
-    if (!isValid) return;
+    if (!isValid || isStepTransitioning) return;
 
     if (currentStep < STEPS.length) {
-      setCurrentStep((prev) => prev + 1);
+      setIsStepTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep((prev) => prev + 1);
+        setIsStepTransitioning(false);
+      }, 150);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > 1 && !isStepTransitioning) {
       setErrors({});
-      setCurrentStep((prev) => prev - 1);
+      setIsStepTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep((prev) => prev - 1);
+        setIsStepTransitioning(false);
+      }, 150);
     }
   };
 
   const handleJumpToStep = (stepNumber) => {
-    setErrors({});
-    setCurrentStep(stepNumber);
+    if (stepNumber === currentStep || isStepTransitioning) return;
+    
+    // Only allow jump if previous steps are valid
+    let canJump = true;
+    for (let i = 1; i < stepNumber; i++) {
+      if (!checkStepValidity(i, formData)) {
+        canJump = false;
+        break;
+      }
+    }
+
+    if (canJump || stepNumber < currentStep) {
+      setErrors({});
+      setIsStepTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(stepNumber);
+        setIsStepTransitioning(false);
+      }, 150);
+    }
   };
 
   const handleClearDraft = () => {
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STEP_STORAGE_KEY);
-    } catch (error) {
-      console.warn('Error clearing localStorage:', error);
+    } catch {
+      // Ignore
     }
     setFormData(INITIAL_FORM_STATE);
     setCurrentStep(1);
@@ -173,41 +237,47 @@ export default function MultiStepForm() {
     e.preventDefault();
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
 
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STEP_STORAGE_KEY);
-    } catch (error) {
-      console.warn('Error removing draft on submit:', error);
-    }
+    setIsSubmitting(true);
 
-    setIsSubmitted(true);
+    // Simulate authentic API network submission
+    setTimeout(() => {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STEP_STORAGE_KEY);
+      } catch {
+        // Ignore
+      }
+
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }, 600);
   };
 
   const progressPercentage = ((currentStep - 1) / (STEPS.length - 1)) * 100;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3 sm:p-6 lg:p-8 text-slate-100 antialiased">
-      <div className="w-full max-w-2xl bg-slate-800/85 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-700/60 p-5 sm:p-8 lg:p-10 transition-all duration-300">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4 sm:p-6 lg:p-8 text-slate-100 antialiased">
+      <div className="w-full max-w-2xl bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-700/60 p-6 sm:p-8 lg:p-10 transition-all duration-300">
         
         {/* Top Header: Step Badge & Auto-save status */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center justify-between gap-3 mb-5">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+              <span className="px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
                 Step {currentStep} of {STEPS.length}
               </span>
             </div>
 
             {lastSavedTime && (
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-full flex-shrink-0">
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1 rounded-full flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="hidden sm:inline">Auto-saved at</span> {lastSavedTime}
               </div>
             )}
           </div>
 
-          {/* Simple Step Progress UI */}
-          <div className="relative pt-2 pb-6">
+          {/* Step Progress UI */}
+          <div className="relative pt-2 pb-5">
             {/* Background Line */}
             <div className="absolute left-0 top-6 -translate-y-1/2 h-1 w-full bg-slate-700/70 z-0 rounded-full" />
             
@@ -222,19 +292,20 @@ export default function MultiStepForm() {
               {STEPS.map((step) => {
                 const isCompleted = step.id < currentStep;
                 const isCurrent = step.id === currentStep;
+                const isValidated = checkStepValidity(step.id, formData);
 
                 return (
                   <div key={step.id} className="flex flex-col items-center">
                     <button
                       type="button"
-                      disabled={step.id > currentStep}
+                      disabled={step.id > currentStep && !isValidated}
                       onClick={() => handleJumpToStep(step.id)}
-                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 shadow-md ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 shadow-md ${
                         isCompleted
                           ? 'bg-indigo-600 hover:bg-indigo-500 text-white ring-4 ring-indigo-950 cursor-pointer'
                           : isCurrent
                           ? 'bg-indigo-500 text-white ring-4 ring-indigo-400/30 scale-110 shadow-indigo-500/25'
-                          : 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed'
+                          : 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed opacity-70'
                       }`}
                     >
                       {isCompleted ? (
@@ -245,7 +316,9 @@ export default function MultiStepForm() {
                         step.id
                       )}
                     </button>
-                    <span className="hidden sm:block text-[11px] font-medium text-slate-400 mt-2 absolute -bottom-1 whitespace-nowrap">
+                    <span className={`hidden sm:block text-[11px] font-medium mt-2 absolute -bottom-1 whitespace-nowrap transition-colors ${
+                      isCurrent ? 'text-indigo-300 font-semibold' : isCompleted ? 'text-slate-300' : 'text-slate-500'
+                    }`}>
                       {step.title}
                     </span>
                   </div>
@@ -257,19 +330,19 @@ export default function MultiStepForm() {
 
         {/* Form Body / Content View */}
         {isSubmitted ? (
-          <div className="text-center py-8">
+          <div className="text-center py-10 animate-fade-in">
             <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Project Created!</h2>
-            <p className="text-slate-300 text-sm mb-6 max-w-sm mx-auto">
+            <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Project Successfully Created!</h2>
+            <p className="text-slate-300 text-sm mb-7 max-w-sm mx-auto leading-relaxed">
               Project <span className="font-semibold text-indigo-300">"{formData.projectName}"</span> has been configured and submitted.
             </p>
             <button
               onClick={handleClearDraft}
-              className="h-11 px-6 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-lg hover:shadow-indigo-500/25 cursor-pointer"
+              className="h-11 px-7 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-lg hover:shadow-indigo-500/25 cursor-pointer"
             >
               Start New Project
             </button>
@@ -277,134 +350,137 @@ export default function MultiStepForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Step 1: Project Info */}
-            {currentStep === 1 && (
-              <ProjectDetailsStep
-                formData={formData}
-                errors={errors}
-                onChange={handleInputChange}
-              />
-            )}
-
-            {/* Step 2: Project Type & Billing */}
-            {currentStep === 2 && (
-              <ProjectTypeStep
-                formData={formData}
-                errors={errors}
-                onChange={handleInputChange}
-              />
-            )}
-
-            {/* Step 3: Tasks & Team */}
-            {currentStep === 3 && (
-              <div className="space-y-8">
-                <TasksStep
+            {/* Step Body with Animation Container */}
+            <div className={`transition-opacity duration-200 ${isStepTransitioning ? 'opacity-40' : 'opacity-100 animate-fade-in'}`}>
+              {/* Step 1: Project Info */}
+              {currentStep === 1 && (
+                <ProjectDetailsStep
                   formData={formData}
-                  setFormData={setFormData}
                   errors={errors}
+                  onChange={handleInputChange}
                 />
-                <div className="border-t border-slate-700/80 pt-6">
-                  <TeamStep
+              )}
+
+              {/* Step 2: Project Type & Billing */}
+              {currentStep === 2 && (
+                <ProjectTypeStep
+                  formData={formData}
+                  errors={errors}
+                  onChange={handleInputChange}
+                />
+              )}
+
+              {/* Step 3: Tasks & Team */}
+              {currentStep === 3 && (
+                <div className="space-y-8">
+                  <TasksStep
                     formData={formData}
                     setFormData={setFormData}
                     errors={errors}
                   />
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Review & Confirmation */}
-            {currentStep === 4 && (
-              <div className="space-y-5">
-                <div className="border-b border-slate-800 pb-4">
-                  <h3 className="text-xl font-bold text-white tracking-tight">Review & Confirmation</h3>
-                  <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                    Please review your project details before final submission.
-                  </p>
-                </div>
-
-                <div className="space-y-3.5 text-xs sm:text-sm">
-                  {/* Summary Box 1: Info */}
-                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
-                        1. Project Info
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleJumpToStep(1)}
-                        className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                    <div className="space-y-1.5 text-slate-300">
-                      <p><strong className="text-slate-400">Name:</strong> {formData.projectName}</p>
-                      <p><strong className="text-slate-400">Client:</strong> {formData.client}</p>
-                      <p><strong className="text-slate-400">Timeline:</strong> {formData.startDate} to {formData.endDate}</p>
-                      {formData.notes && <p><strong className="text-slate-400">Notes:</strong> {formData.notes}</p>}
-                    </div>
-                  </div>
-
-                  {/* Summary Box 2: Type */}
-                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
-                        2. Billing & Type
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleJumpToStep(2)}
-                        className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                    <div className="space-y-1.5 text-slate-300">
-                      <p><strong className="text-slate-400">Type:</strong> {formData.projectType}</p>
-                      {formData.projectType === 'Time & Materials' && (
-                        <p><strong className="text-slate-400">Rate:</strong> ${formData.hourlyRate}/hr</p>
-                      )}
-                      {formData.projectType === 'Fixed Fee' && (
-                        <p><strong className="text-slate-400">Budget:</strong> ${Number(formData.budget).toLocaleString()}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Summary Box 3: Tasks & Team */}
-                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
-                        3. Tasks & Team
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleJumpToStep(3)}
-                        className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                    <div className="space-y-1.5 text-slate-300">
-                      <p><strong className="text-slate-400">Tasks ({formData.tasks.length}):</strong> {formData.tasks.join(', ') || 'None'}</p>
-                      <p><strong className="text-slate-400">Team ({formData.team.length}):</strong> {formData.team.map((m) => m.name).join(', ') || 'None'}</p>
-                    </div>
+                  <div className="border-t border-slate-700/80 pt-6">
+                    <TeamStep
+                      formData={formData}
+                      setFormData={setFormData}
+                      errors={errors}
+                    />
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Step 4: Review & Confirmation */}
+              {currentStep === 4 && (
+                <div className="space-y-5">
+                  <div className="border-b border-slate-800 pb-4">
+                    <h3 className="text-xl font-bold text-white tracking-tight">Review & Confirmation</h3>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                      Please review your project details before final submission.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3.5 text-xs sm:text-sm">
+                    {/* Summary Box 1: Info */}
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
+                          1. Project Info
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleJumpToStep(1)}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                      <div className="space-y-1.5 text-slate-300">
+                        <p><strong className="text-slate-400">Name:</strong> {formData.projectName}</p>
+                        <p><strong className="text-slate-400">Client:</strong> {formData.client}</p>
+                        <p><strong className="text-slate-400">Timeline:</strong> {formData.startDate} to {formData.endDate}</p>
+                        {formData.notes && <p><strong className="text-slate-400">Notes:</strong> {formData.notes}</p>}
+                      </div>
+                    </div>
+
+                    {/* Summary Box 2: Type */}
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
+                          2. Billing & Type
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleJumpToStep(2)}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                      <div className="space-y-1.5 text-slate-300">
+                        <p><strong className="text-slate-400">Type:</strong> {formData.projectType}</p>
+                        {formData.projectType === 'Time & Materials' && (
+                          <p><strong className="text-slate-400">Rate:</strong> ${formData.hourlyRate}/hr</p>
+                        )}
+                        {formData.projectType === 'Fixed Fee' && (
+                          <p><strong className="text-slate-400">Budget:</strong> ${Number(formData.budget).toLocaleString()}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Summary Box 3: Tasks & Team */}
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
+                          3. Tasks & Team
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleJumpToStep(3)}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                      <div className="space-y-1.5 text-slate-300">
+                        <p><strong className="text-slate-400">Tasks ({formData.tasks.length}):</strong> {formData.tasks.join(', ') || 'None'}</p>
+                        <p><strong className="text-slate-400">Team ({formData.team.length}):</strong> {formData.team.map((m) => m.name).join(', ') || 'None'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Navigation & Action Bar */}
-            <div className="pt-6 border-t border-slate-700/70 flex items-center justify-between gap-3">
+            <div className="pt-6 mt-6 border-t border-slate-700/70 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleBack}
-                  disabled={currentStep === 1}
+                  disabled={currentStep === 1 || isStepTransitioning || isSubmitting}
                   className={`h-11 px-5 text-sm font-semibold rounded-xl transition-all ${
                     currentStep === 1
                       ? 'opacity-0 pointer-events-none'
-                      : 'bg-slate-700 hover:bg-slate-600 text-slate-200 cursor-pointer shadow-sm'
+                      : 'bg-slate-700/80 hover:bg-slate-600 active:bg-slate-700 text-slate-200 cursor-pointer shadow-sm'
                   }`}
                 >
                   Back
@@ -413,7 +489,8 @@ export default function MultiStepForm() {
                 <button
                   type="button"
                   onClick={handleClearDraft}
-                  className="text-xs text-slate-500 hover:text-red-400 transition-colors px-2.5 py-2 cursor-pointer font-medium"
+                  disabled={isSubmitting}
+                  className="text-xs text-slate-400 hover:text-red-400 transition-colors px-2.5 py-2 cursor-pointer font-medium"
                 >
                   Clear Draft
                 </button>
@@ -423,16 +500,56 @@ export default function MultiStepForm() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="h-11 px-6 text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl transition-all shadow-md hover:shadow-indigo-500/20 cursor-pointer ml-auto"
+                  disabled={!isCurrentStepValid || isStepTransitioning}
+                  className={`h-11 px-6 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ml-auto ${
+                    !isCurrentStepValid || isStepTransitioning
+                      ? 'bg-slate-700/60 text-slate-400 border border-slate-600/40 cursor-not-allowed opacity-60 shadow-none'
+                      : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white cursor-pointer shadow-md hover:shadow-indigo-500/20'
+                  }`}
                 >
-                  Next Step
+                  {isStepTransitioning ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Next Step</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="h-11 px-6 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl transition-all shadow-md hover:shadow-emerald-500/20 cursor-pointer ml-auto"
+                  disabled={!isCurrentStepValid || isSubmitting}
+                  className={`h-11 px-7 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ml-auto ${
+                    !isCurrentStepValid || isSubmitting
+                      ? 'bg-slate-700/60 text-slate-400 border border-slate-600/40 cursor-not-allowed opacity-60 shadow-none'
+                      : 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white cursor-pointer shadow-md hover:shadow-emerald-500/20'
+                  }`}
                 >
-                  Submit Project
+                  {isSubmitting ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Submit Project</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               )}
             </div>

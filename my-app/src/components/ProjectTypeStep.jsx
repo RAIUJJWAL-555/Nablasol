@@ -102,8 +102,8 @@ export default function ProjectTypeStep({ formData, errors = {}, onChange }) {
 
       {/* Conditional: Time & Materials -> Hourly Rate */}
       {formData.projectType === 'Time & Materials' && (
-        <div className="pt-1">
-          <label htmlFor="hourlyRate" className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+        <div className="pt-2 animate-fade-in">
+          <label htmlFor="hourlyRate" className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
             Hourly Rate ($/hr) <span className="text-red-400">*</span>
           </label>
           <div className="relative">
@@ -122,7 +122,7 @@ export default function ProjectTypeStep({ formData, errors = {}, onChange }) {
               className={`w-full h-11 pl-9 pr-20 bg-slate-900/70 border rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
                 errors.hourlyRate
                   ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                  : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                  : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
               }`}
             />
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 text-xs font-medium">
@@ -142,8 +142,8 @@ export default function ProjectTypeStep({ formData, errors = {}, onChange }) {
 
       {/* Conditional: Fixed Fee -> Total Budget */}
       {formData.projectType === 'Fixed Fee' && (
-        <div className="pt-1">
-          <label htmlFor="budget" className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+        <div className="pt-2 animate-fade-in">
+          <label htmlFor="budget" className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
             Total Project Budget ($) <span className="text-red-400">*</span>
           </label>
           <div className="relative">
@@ -162,7 +162,7 @@ export default function ProjectTypeStep({ formData, errors = {}, onChange }) {
               className={`w-full h-11 pl-9 pr-16 bg-slate-900/70 border rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
                 errors.budget
                   ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                  : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                  : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
               }`}
             />
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 text-xs font-medium">

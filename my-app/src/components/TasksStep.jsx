@@ -66,7 +66,7 @@ export default function TasksStep({ formData, setFormData, errors = {} }) {
             className={`flex-1 h-11 px-4 bg-slate-900/70 border rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
               inputError
                 ? 'border-red-500/80 focus:ring-red-500/40 bg-red-950/10'
-                : 'border-slate-700/80 focus:border-indigo-500 focus:ring-indigo-500/30'
+                : 'border-slate-700/80 hover:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500/30'
             }`}
           />
 
