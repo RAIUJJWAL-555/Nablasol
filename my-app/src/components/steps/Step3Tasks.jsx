@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import ErrorMessage from '../common/ErrorMessage';
+import { formClasses } from '../../utils/formClasses';
 
-export default function TasksStep({ formData, setFormData, errors = {} }) {
+/**
+ * Step 3: Tasks & Deliverables (Array management with Add/Remove)
+ */
+export default function Step3Tasks({ formData, setFormData, errors = {}, touched = {} }) {
   const [taskInput, setTaskInput] = useState('');
   const [inputError, setInputError] = useState('');
 
@@ -10,6 +15,11 @@ export default function TasksStep({ formData, setFormData, errors = {} }) {
     const trimmedTask = taskInput.trim();
     if (!trimmedTask) {
       setInputError('Please enter a task description.');
+      return;
+    }
+
+    if (formData.tasks.includes(trimmedTask)) {
+      setInputError('This task has already been added.');
       return;
     }
 
@@ -37,24 +47,28 @@ export default function TasksStep({ formData, setFormData, errors = {} }) {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-4 sm:space-y-5 animate-fade-in">
       {/* Header & Counter */}
-      <div className="flex items-center justify-between">
+      <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
         <div>
-          <h4 className="text-base font-bold text-slate-900 tracking-tight">Project Tasks</h4>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Key milestones, deliverables, and scope items.
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Tasks & Scope</h3>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Define deliverables, work packages, and scope items.
           </p>
         </div>
-        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 border border-slate-200 flex-shrink-0">
           {formData.tasks.length} {formData.tasks.length === 1 ? 'Task' : 'Tasks'}
         </span>
       </div>
 
       {/* Input Group */}
       <div>
+        <label htmlFor="taskInput" className={formClasses.label}>
+          Add Deliverable <span className="text-red-500 font-bold">*</span>
+        </label>
         <div className="flex flex-col sm:flex-row gap-2.5">
           <input
+            id="taskInput"
             type="text"
             value={taskInput}
             onChange={(e) => {
@@ -62,12 +76,8 @@ export default function TasksStep({ formData, setFormData, errors = {} }) {
               if (inputError) setInputError('');
             }}
             onKeyDown={handleKeyDown}
-            placeholder="e.g. Design UI Wireframes & Mockups"
-            className={`flex-1 h-11 px-4 bg-slate-50/80 border rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-              inputError
-                ? 'border-red-400 focus:ring-red-500/20 bg-red-50/30'
-                : 'border-slate-200 hover:border-slate-300 focus:border-black focus:ring-black/10'
-            }`}
+            placeholder="e.g. Design High-Fidelity UI Wireframes & Prototypes"
+            className={formClasses.input(Boolean(inputError))}
           />
 
           <button
@@ -82,27 +92,21 @@ export default function TasksStep({ formData, setFormData, errors = {} }) {
           </button>
         </div>
 
-        {inputError && (
-          <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {inputError}
-          </p>
-        )}
+        <ErrorMessage error={inputError} />
       </div>
 
-      {errors.tasks && (
-        <p className="text-xs text-red-500 font-medium">{errors.tasks}</p>
+      {/* Step validation error */}
+      {touched.tasks && errors.tasks && (
+        <ErrorMessage error={errors.tasks} />
       )}
 
       {/* Task List */}
-      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
         {formData.tasks.length === 0 ? (
-          <div className="text-center py-6 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-            <p className="text-xs text-slate-500 font-medium">No tasks added yet.</p>
+          <div className="text-center py-7 px-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+            <p className="text-xs text-slate-500 font-semibold">No deliverables added yet.</p>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Add your first deliverable using the input above.
+              Add at least one key deliverable to complete this step.
             </p>
           </div>
         ) : (
@@ -112,7 +116,7 @@ export default function TasksStep({ formData, setFormData, errors = {} }) {
               className="group flex items-center justify-between bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200 px-3.5 py-2.5 rounded-xl transition-all"
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
-                <span className="w-5 h-5 rounded-lg bg-white border border-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-xs">
+                <span className="w-5 h-5 rounded-lg bg-white border border-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-2xs">
                   {index + 1}
                 </span>
                 <span className="text-xs sm:text-sm text-slate-800 truncate font-medium">
