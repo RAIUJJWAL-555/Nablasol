@@ -3,6 +3,8 @@ import ProjectDetailsStep from './ProjectDetailsStep';
 import ProjectTypeStep from './ProjectTypeStep';
 import TasksStep from './TasksStep';
 import TeamStep from './TeamStep';
+import SubmissionSuccessView from './SubmissionSuccessView';
+import catHeroImg from '../assets/cat-hero.jpg';
 
 const STORAGE_KEY = 'project_form_draft_data';
 const STEP_STORAGE_KEY = 'project_form_draft_step';
@@ -77,7 +79,7 @@ const loadSavedFormData = () => {
       };
     }
   } catch {
-    // Gracefully fallback
+    // Fallback
   }
   return INITIAL_FORM_STATE;
 };
@@ -92,7 +94,7 @@ const loadSavedStep = () => {
       }
     }
   } catch {
-    // Gracefully fallback
+    // Fallback
   }
   return 1;
 };
@@ -102,7 +104,6 @@ export default function MultiStepForm() {
   const [currentStep, setCurrentStep] = useState(loadSavedStep);
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStepTransitioning, setIsStepTransitioning] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState(null);
 
@@ -201,7 +202,6 @@ export default function MultiStepForm() {
   const handleJumpToStep = (stepNumber) => {
     if (stepNumber === currentStep || isStepTransitioning) return;
     
-    // Only allow jump if previous steps are valid
     let canJump = true;
     for (let i = 1; i < stepNumber; i++) {
       if (!checkStepValidity(i, formData)) {
@@ -237,325 +237,342 @@ export default function MultiStepForm() {
     e.preventDefault();
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
 
-    setIsSubmitting(true);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STEP_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
 
-    // Simulate authentic API network submission
-    setTimeout(() => {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(STEP_STORAGE_KEY);
-      } catch {
-        // Ignore
-      }
-
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 600);
+    setIsSubmitted(true);
   };
 
   const progressPercentage = ((currentStep - 1) / (STEPS.length - 1)) * 100;
 
+  if (isSubmitted) {
+    return (
+      <SubmissionSuccessView
+        formData={formData}
+        onStartNew={handleClearDraft}
+        onEditForm={() => setIsSubmitted(false)}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4 sm:p-6 lg:p-8 text-slate-100 antialiased">
-      <div className="w-full max-w-2xl bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-700/60 p-6 sm:p-8 lg:p-10 transition-all duration-300">
-        
-        {/* Top Header: Step Badge & Auto-save status */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div className="flex items-center gap-2">
-              <span className="px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-                Step {currentStep} of {STEPS.length}
-              </span>
-            </div>
-
-            {lastSavedTime && (
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1 rounded-full flex-shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="hidden sm:inline">Auto-saved at</span> {lastSavedTime}
+    <div className="min-h-screen w-full bg-white text-slate-800 antialiased flex flex-col lg:flex-row items-stretch justify-between relative">
+      
+      {/* Left Column: Form Container */}
+      <div className="w-full lg:w-7/12 xl:w-3/5 p-4 sm:p-6 lg:p-8 xl:p-12 flex items-center justify-center lg:justify-end">
+        <div className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200/90 shadow-xl shadow-slate-200/50 p-6 sm:p-8 lg:p-9 transition-all duration-300">
+          
+            {/* Top Header: Step Badge & Auto-save status */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-2">
+                <span className="px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
+                  Step {currentStep} of {STEPS.length}
+                </span>
               </div>
-            )}
-          </div>
 
-          {/* Step Progress UI */}
-          <div className="relative pt-2 pb-5">
-            {/* Background Line */}
-            <div className="absolute left-0 top-6 -translate-y-1/2 h-1 w-full bg-slate-700/70 z-0 rounded-full" />
-            
-            {/* Active Progress Fill */}
-            <div
-              className="absolute left-0 top-6 -translate-y-1/2 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 z-0 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
+              {lastSavedTime && (
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex-shrink-0 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="hidden sm:inline">Auto-saved at</span> {lastSavedTime}
+                </div>
+              )}
+            </div>
 
-            {/* Stepper Dots & Labels */}
-            <div className="relative z-10 flex items-center justify-between">
-              {STEPS.map((step) => {
-                const isCompleted = step.id < currentStep;
-                const isCurrent = step.id === currentStep;
-                const isValidated = checkStepValidity(step.id, formData);
+            {/* Step Progress UI */}
+            <div className="relative pt-1 pb-2">
+              {/* Background Track Line */}
+              <div className="absolute left-4 right-4 top-[18px] -translate-y-1/2 h-1 bg-slate-100 z-0 rounded-full" />
+              
+              {/* Active Progress Fill */}
+              <div
+                className="absolute left-4 top-[18px] -translate-y-1/2 h-1 bg-black z-0 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `calc(${progressPercentage}% * 0.9)` }}
+              />
 
-                return (
-                  <div key={step.id} className="flex flex-col items-center">
-                    <button
-                      type="button"
-                      disabled={step.id > currentStep && !isValidated}
-                      onClick={() => handleJumpToStep(step.id)}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 shadow-md ${
-                        isCompleted
-                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white ring-4 ring-indigo-950 cursor-pointer'
-                          : isCurrent
-                          ? 'bg-indigo-500 text-white ring-4 ring-indigo-400/30 scale-110 shadow-indigo-500/25'
-                          : 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed opacity-70'
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        step.id
-                      )}
-                    </button>
-                    <span className={`hidden sm:block text-[11px] font-medium mt-2 absolute -bottom-1 whitespace-nowrap transition-colors ${
-                      isCurrent ? 'text-indigo-300 font-semibold' : isCompleted ? 'text-slate-300' : 'text-slate-500'
-                    }`}>
-                      {step.title}
-                    </span>
-                  </div>
-                );
-              })}
+              {/* Stepper Dots & Labels */}
+              <div className="relative z-10 flex items-start justify-between">
+                {STEPS.map((step) => {
+                  const isCompleted = step.id < currentStep;
+                  const isCurrent = step.id === currentStep;
+                  const isValidated = checkStepValidity(step.id, formData);
+
+                  return (
+                    <div key={step.id} className="flex flex-col items-center">
+                      <button
+                        type="button"
+                        disabled={step.id > currentStep && !isValidated}
+                        onClick={() => handleJumpToStep(step.id)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 ${
+                          isCompleted
+                            ? 'bg-black hover:bg-slate-800 text-white ring-4 ring-slate-100 cursor-pointer shadow-xs'
+                            : isCurrent
+                            ? 'bg-black text-white ring-4 ring-slate-200 scale-110 shadow-md shadow-black/20'
+                            : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          step.id
+                        )}
+                      </button>
+
+                      <span className={`text-[11px] sm:text-xs font-medium mt-2.5 text-center whitespace-nowrap transition-colors ${
+                        isCurrent ? 'text-black font-bold' : isCompleted ? 'text-slate-800 font-semibold' : 'text-slate-400'
+                      }`}>
+                        {step.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Form Body / Content View */}
-        {isSubmitted ? (
-          <div className="text-center py-10 animate-fade-in">
-            <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-              </svg>
+          {/* Form Body / Content View */}
+          {isSubmitted ? (
+            <div className="text-center py-10 animate-fade-in">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-md shadow-emerald-500/10">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Project Successfully Created!</h2>
+              <p className="text-slate-600 text-sm mb-7 max-w-sm mx-auto leading-relaxed">
+                Project <span className="font-semibold text-slate-900">"{formData.projectName}"</span> has been configured and submitted.
+              </p>
+              <button
+                onClick={handleClearDraft}
+                className="h-11 px-7 bg-black hover:bg-slate-800 active:bg-slate-900 text-white font-semibold rounded-xl text-sm transition-all shadow-md hover:shadow-black/25 cursor-pointer"
+              >
+                Start New Project
+              </button>
             </div>
-            <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Project Successfully Created!</h2>
-            <p className="text-slate-300 text-sm mb-7 max-w-sm mx-auto leading-relaxed">
-              Project <span className="font-semibold text-indigo-300">"{formData.projectName}"</span> has been configured and submitted.
-            </p>
-            <button
-              onClick={handleClearDraft}
-              className="h-11 px-7 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-lg hover:shadow-indigo-500/25 cursor-pointer"
-            >
-              Start New Project
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Step Body with Animation Container */}
-            <div className={`transition-opacity duration-200 ${isStepTransitioning ? 'opacity-40' : 'opacity-100 animate-fade-in'}`}>
-              {/* Step 1: Project Info */}
-              {currentStep === 1 && (
-                <ProjectDetailsStep
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleInputChange}
-                />
-              )}
-
-              {/* Step 2: Project Type & Billing */}
-              {currentStep === 2 && (
-                <ProjectTypeStep
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleInputChange}
-                />
-              )}
-
-              {/* Step 3: Tasks & Team */}
-              {currentStep === 3 && (
-                <div className="space-y-8">
-                  <TasksStep
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* Step Body with Animation */}
+              <div className={`transition-opacity duration-200 ${isStepTransitioning ? 'opacity-40' : 'opacity-100 animate-fade-in'}`}>
+                {/* Step 1: Project Info */}
+                {currentStep === 1 && (
+                  <ProjectDetailsStep
                     formData={formData}
-                    setFormData={setFormData}
                     errors={errors}
+                    onChange={handleInputChange}
                   />
-                  <div className="border-t border-slate-700/80 pt-6">
-                    <TeamStep
+                )}
+
+                {/* Step 2: Project Type & Billing */}
+                {currentStep === 2 && (
+                  <ProjectTypeStep
+                    formData={formData}
+                    errors={errors}
+                    onChange={handleInputChange}
+                  />
+                )}
+
+                {/* Step 3: Tasks & Team */}
+                {currentStep === 3 && (
+                  <div className="space-y-8">
+                    <TasksStep
                       formData={formData}
                       setFormData={setFormData}
                       errors={errors}
                     />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Review & Confirmation */}
-              {currentStep === 4 && (
-                <div className="space-y-5">
-                  <div className="border-b border-slate-800 pb-4">
-                    <h3 className="text-xl font-bold text-white tracking-tight">Review & Confirmation</h3>
-                    <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                      Please review your project details before final submission.
-                    </p>
-                  </div>
-
-                  <div className="space-y-3.5 text-xs sm:text-sm">
-                    {/* Summary Box 1: Info */}
-                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
-                          1. Project Info
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleJumpToStep(1)}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                      <div className="space-y-1.5 text-slate-300">
-                        <p><strong className="text-slate-400">Name:</strong> {formData.projectName}</p>
-                        <p><strong className="text-slate-400">Client:</strong> {formData.client}</p>
-                        <p><strong className="text-slate-400">Timeline:</strong> {formData.startDate} to {formData.endDate}</p>
-                        {formData.notes && <p><strong className="text-slate-400">Notes:</strong> {formData.notes}</p>}
-                      </div>
-                    </div>
-
-                    {/* Summary Box 2: Type */}
-                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
-                          2. Billing & Type
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleJumpToStep(2)}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                      <div className="space-y-1.5 text-slate-300">
-                        <p><strong className="text-slate-400">Type:</strong> {formData.projectType}</p>
-                        {formData.projectType === 'Time & Materials' && (
-                          <p><strong className="text-slate-400">Rate:</strong> ${formData.hourlyRate}/hr</p>
-                        )}
-                        {formData.projectType === 'Fixed Fee' && (
-                          <p><strong className="text-slate-400">Budget:</strong> ${Number(formData.budget).toLocaleString()}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Summary Box 3: Tasks & Team */}
-                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-2xl p-4 sm:p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs">
-                          3. Tasks & Team
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleJumpToStep(3)}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 font-medium underline cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                      <div className="space-y-1.5 text-slate-300">
-                        <p><strong className="text-slate-400">Tasks ({formData.tasks.length}):</strong> {formData.tasks.join(', ') || 'None'}</p>
-                        <p><strong className="text-slate-400">Team ({formData.team.length}):</strong> {formData.team.map((m) => m.name).join(', ') || 'None'}</p>
-                      </div>
+                    <div className="border-t border-slate-100 pt-6">
+                      <TeamStep
+                        formData={formData}
+                        setFormData={setFormData}
+                        errors={errors}
+                      />
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
 
-            {/* Navigation & Action Bar */}
-            <div className="pt-6 mt-6 border-t border-slate-700/70 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  disabled={currentStep === 1 || isStepTransitioning || isSubmitting}
-                  className={`h-11 px-5 text-sm font-semibold rounded-xl transition-all ${
-                    currentStep === 1
-                      ? 'opacity-0 pointer-events-none'
-                      : 'bg-slate-700/80 hover:bg-slate-600 active:bg-slate-700 text-slate-200 cursor-pointer shadow-sm'
-                  }`}
-                >
-                  Back
-                </button>
+                {/* Step 4: Review & Confirmation */}
+                {currentStep === 4 && (
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-100 pb-4">
+                      <h3 className="text-xl font-bold text-slate-900 tracking-tight">Review & Confirmation</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                        Please review your project details before final submission.
+                      </p>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={handleClearDraft}
-                  disabled={isSubmitting}
-                  className="text-xs text-slate-400 hover:text-red-400 transition-colors px-2.5 py-2 cursor-pointer font-medium"
-                >
-                  Clear Draft
-                </button>
+                    <div className="space-y-3.5 text-xs sm:text-sm">
+                      {/* Summary Box 1: Info */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-bold text-black uppercase tracking-wider text-xs">
+                            1. Project Info
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleJumpToStep(1)}
+                            className="text-xs text-black hover:text-slate-600 font-semibold underline cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        <div className="space-y-1.5 text-slate-700">
+                          <p><strong className="text-slate-500">Name:</strong> {formData.projectName}</p>
+                          <p><strong className="text-slate-500">Client:</strong> {formData.client}</p>
+                          <p><strong className="text-slate-500">Timeline:</strong> {formData.startDate} to {formData.endDate}</p>
+                          {formData.notes && <p><strong className="text-slate-500">Notes:</strong> {formData.notes}</p>}
+                        </div>
+                      </div>
+
+                      {/* Summary Box 2: Type */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-bold text-black uppercase tracking-wider text-xs">
+                            2. Billing & Type
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleJumpToStep(2)}
+                            className="text-xs text-black hover:text-slate-600 font-semibold underline cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        <div className="space-y-1.5 text-slate-700">
+                          <p><strong className="text-slate-500">Type:</strong> {formData.projectType}</p>
+                          {formData.projectType === 'Time & Materials' && (
+                            <p><strong className="text-slate-500">Rate:</strong> ${formData.hourlyRate}/hr</p>
+                          )}
+                          {formData.projectType === 'Fixed Fee' && (
+                            <p><strong className="text-slate-500">Budget:</strong> ${Number(formData.budget).toLocaleString()}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Summary Box 3: Tasks & Team */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-bold text-black uppercase tracking-wider text-xs">
+                            3. Tasks & Team
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleJumpToStep(3)}
+                            className="text-xs text-black hover:text-slate-600 font-semibold underline cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        <div className="space-y-1.5 text-slate-700">
+                          <p><strong className="text-slate-500">Tasks ({formData.tasks.length}):</strong> {formData.tasks.join(', ') || 'None'}</p>
+                          <p><strong className="text-slate-500">Team ({formData.team.length}):</strong> {formData.team.map((m) => m.name).join(', ') || 'None'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {currentStep < STEPS.length ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={!isCurrentStepValid || isStepTransitioning}
-                  className={`h-11 px-6 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ml-auto ${
-                    !isCurrentStepValid || isStepTransitioning
-                      ? 'bg-slate-700/60 text-slate-400 border border-slate-600/40 cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white cursor-pointer shadow-md hover:shadow-indigo-500/20'
-                  }`}
-                >
-                  {isStepTransitioning ? (
-                    <>
-                      <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                      </svg>
-                      <span>Loading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Next Step</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!isCurrentStepValid || isSubmitting}
-                  className={`h-11 px-7 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ml-auto ${
-                    !isCurrentStepValid || isSubmitting
-                      ? 'bg-slate-700/60 text-slate-400 border border-slate-600/40 cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white cursor-pointer shadow-md hover:shadow-emerald-500/20'
-                  }`}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                      </svg>
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Submit Project</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </form>
-        )}
+              {/* Navigation & Action Bar */}
+              <div className="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    disabled={currentStep === 1 || isStepTransitioning}
+                    className={`h-11 px-5 text-sm font-semibold rounded-xl transition-all ${
+                      currentStep === 1
+                        ? 'opacity-0 pointer-events-none'
+                        : 'bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-200 cursor-pointer shadow-xs'
+                    }`}
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleClearDraft}
+                    className="text-xs text-slate-400 hover:text-red-600 transition-colors px-2.5 py-2 cursor-pointer font-medium"
+                  >
+                    Clear Draft
+                  </button>
+                </div>
+
+                {currentStep < STEPS.length ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={!isCurrentStepValid || isStepTransitioning}
+                    className={`h-11 px-6 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ml-auto ${
+                      !isCurrentStepValid || isStepTransitioning
+                        ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
+                        : 'bg-black hover:bg-slate-800 active:bg-slate-900 text-white cursor-pointer shadow-md hover:shadow-black/20'
+                    }`}
+                  >
+                    {isStepTransitioning ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                        <span>Loading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Next Step</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!isCurrentStepValid}
+                    className={`h-11 px-7 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ml-auto ${
+                      !isCurrentStepValid
+                        ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'
+                        : 'bg-black hover:bg-slate-800 active:bg-slate-900 text-white cursor-pointer shadow-md hover:shadow-black/20'
+                    }`}
+                  >
+                    <span>Submit Project</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+        </div>
       </div>
+
+      {/* Right Column: Cat Hero Image (Seamlessly merges with white background) */}
+      <div className="hidden lg:flex lg:w-5/12 xl:w-2/5 relative items-center justify-center bg-white p-6 xl:p-10 select-none overflow-hidden">
+        <div className="relative max-w-md w-full flex flex-col items-center justify-center">
+          <img
+            src={catHeroImg}
+            alt="Curious Cat Peeking"
+            className="w-full max-h-[80vh] object-contain select-none pointer-events-none transition-transform duration-500 hover:scale-105"
+          />
+          
+          {/* Subtle Decorative Floating Card */}
+          <div className="absolute bottom-6 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-lg shadow-slate-200/50 px-5 py-3 rounded-2xl flex items-center gap-3.5 animate-fade-in">
+            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+            <div>
+              <p className="text-xs font-bold text-slate-800 tracking-tight">Supervising with Care 🐾</p>
+              <p className="text-[11px] text-slate-500 font-medium">Keep track of your project & team</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
