@@ -34,8 +34,8 @@ export const validateTask2Step1 = (data) => {
 
   if (!data.password) {
     errors.password = 'Password is required.';
-  } else if (data.password.length < 6) {
-    errors.password = 'Password must be at least 6 characters long.';
+  } else if (data.password.length < 8) {
+    errors.password = 'Password must be at least 8 characters long.';
   }
 
   if (!data.confirmPassword) {

@@ -78,6 +78,7 @@ function Task2Step1Profile({ formData, errors = {}, touched = {}, onChange, onBl
           label="Password"
           type="password"
           required
+          minLength={8}
           value={formData.password}
           onChange={onChange}
           onBlur={onBlur}
