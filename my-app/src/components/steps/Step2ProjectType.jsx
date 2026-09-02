@@ -44,15 +44,29 @@ function Step2ProjectType({
   touched = {},
   onChange,
   onBlur,
+  setFormData,
   onTypeSelect,
 }) {
   const handleSelectType = (typeId) => {
-    setFormData((prev) => ({
-      ...prev,
-      projectType: typeId,
-      hourlyRate: typeId === 'Time & Materials' ? prev.hourlyRate : '',
-      budget: typeId === 'Fixed Fee' ? prev.budget : '',
-    }));
+    if (typeof setFormData === 'function') {
+      setFormData((prev) => ({
+        ...prev,
+        projectType: typeId,
+        hourlyRate: typeId === 'Time & Materials' ? prev.hourlyRate : '',
+        budget: typeId === 'Fixed Fee' ? prev.budget : '',
+      }));
+    } else if (typeof onChange === 'function') {
+      onChange({
+        target: {
+          name: 'projectType',
+          value: typeId,
+        },
+      });
+    }
+
+    if (typeof onTypeSelect === 'function') {
+      onTypeSelect(typeId);
+    }
   };
 
   return (
